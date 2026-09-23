@@ -1,7 +1,7 @@
 # MissingPowerForever
 
 <p align="center">
-  <img src="Media/icon.png" alt="MissingPowerForever" width="200">
+  <img width="400" height="400" alt="d62a6059252dd42a28347ed3ec634cb5c9ea15ce1208_url" src="https://github.com/user-attachments/assets/e0db7a3e-813a-4a49-90d8-fd1fbb90d735" />
 </p>
 
 Cast counts on your action buttons for [WoW Forever](https://worldofforever.com/), plus a pulse when regen is about to make a spell affordable, and an optional spark on **your portrait mana bar** after you spend mana.
