@@ -6,8 +6,6 @@
 
 Cast counts on your action buttons for [WoW Forever](https://worldofforever.com/), plus a pulse when regen is about to make a spell affordable, and an optional spark on **your portrait mana bar** after you spend mana.
 
-Inspired by [MissingPower](https://www.curseforge.com/wow/addons/missingpower) by D4KiR. This is a new Forever-safe implementation (secret `UnitPower` values, continuous regen), not a copy of that addon.
-
 ![Cast counts](docs/manaaddon.mp4)
 
 ![Mana spark](docs/manatick.mp4)
