@@ -55,26 +55,26 @@ local defaults = {
 	showBar = false,
 	showCount = true,
 	pulse = true,
-	fiveSecondRule = false,
+	fiveSecondRule = true,
 	energyTick = false,
 	healthTick = false,
-	countSize = 12,
+	countSize = 19,
 	countOffsetX = -12,
 	countOffsetY = 12,
-	countFont = "Fonts\\FRIZQT__.TTF",
-	countOutline = "OUTLINE",
+	countFont = "Fonts\\ARIALN.TTF",
+	countOutline = "THICKOUTLINE",
 	countBold = false,
-	countColorR = 1,
-	countColorG = 1,
+	countColorR = 0.55,
+	countColorG = 0.90,
 	countColorB = 1,
 	countColorA = 1,
 	countShadowR = 0,
 	countShadowG = 0,
 	countShadowB = 0,
 	countShadowA = 1,
-	countShadowSize = 1,
+	countShadowSize = 2,
 	countLocked = false,
-	activeStyle = "classic",
+	activeStyle = "ice",
 }
 
 local db
@@ -512,18 +512,18 @@ MP.STYLES = {
 		id = "ice",
 		name = "Ice",
 		countFont = "Fonts\\ARIALN.TTF",
-		countSize = 13,
-		countOutline = "OUTLINE",
+		countSize = 19,
+		countOutline = "THICKOUTLINE",
 		countBold = false,
 		countColorR = 0.55,
 		countColorG = 0.90,
 		countColorB = 1,
 		countColorA = 1,
 		countShadowR = 0,
-		countShadowG = 0.12,
-		countShadowB = 0.28,
-		countShadowA = 0.95,
-		countShadowSize = 1,
+		countShadowG = 0,
+		countShadowB = 0,
+		countShadowA = 1,
+		countShadowSize = 2,
 		countOffsetX = -12,
 		countOffsetY = 12,
 	},
@@ -1273,6 +1273,31 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2)
 			end
 			db.showBar = false
 			db.healthTick = false
+			if not db.togglesDefaultOn then
+				db.togglesDefaultOn = true
+				db.enabled = true
+				db.showCount = true
+				db.pulse = true
+				db.fiveSecondRule = true
+			end
+			if not db.castCountLook then
+				db.castCountLook = true
+				db.countFont = defaults.countFont
+				db.countSize = defaults.countSize
+				db.countOutline = defaults.countOutline
+				db.countBold = defaults.countBold
+				db.countColorR = defaults.countColorR
+				db.countColorG = defaults.countColorG
+				db.countColorB = defaults.countColorB
+				db.countColorA = defaults.countColorA
+				db.countShadowR = defaults.countShadowR
+				db.countShadowG = defaults.countShadowG
+				db.countShadowB = defaults.countShadowB
+				db.countShadowA = defaults.countShadowA
+				db.countShadowSize = defaults.countShadowSize
+				db.countLocked = false
+				db.activeStyle = "ice"
+			end
 			MP.db = db
 			return
 		end

@@ -1,3 +1,9 @@
+## 1.0.7
+
+- Options are a single page: toggles, preview, styles, and font controls together
+- Cast count, pulse, and mana spark are on by default
+- Default count look: Arial Narrow, thick outline, size 19, ice cyan
+
 ## 1.0.6
 
 - Removed the health-bar spark

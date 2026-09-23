@@ -449,17 +449,12 @@ local function CreateOptions()
 		f:Hide()
 	end)
 
-	local tabBar = CreateFrame("Frame", nil, f)
-	tabBar:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 18, -10)
-	tabBar:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", -18, -10)
-	tabBar:SetHeight(26)
-
 	local body = CreateFrame("Frame", nil, f)
-	body:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -12)
+	body:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 18, -12)
 	body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -18, 16)
 
-	local general = CreateFrame("Frame", nil, body)
-	general:SetAllPoints()
+	local designer = CreateFrame("Frame", nil, body)
+	designer:SetAllPoints()
 
 	local opts = {
 		{ "Enable addon", "enabled", "Master toggle." },
@@ -468,27 +463,16 @@ local function CreateOptions()
 		{ "Spark on player mana bar", "fiveSecondRule", "A tick that slides across YOUR PORTRAIT mana bar for 5 seconds after you spend mana." },
 	}
 
-	local last
+	local checkHost = CreateFrame("Frame", nil, designer)
+	checkHost:SetPoint("TOPLEFT", designer, "TOPLEFT", 0, 0)
+	checkHost:SetPoint("TOPRIGHT", designer, "TOPRIGHT", 0, 0)
+	checkHost:SetHeight(56)
 	for i, info in ipairs(opts) do
-		local row = MakeCheck(general, info[1], info[2], info[3])
-		if last then
-			row:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
-		else
-			row:SetPoint("TOPLEFT", general, "TOPLEFT", 0, 0)
-		end
-		last = row
+		local row = MakeCheck(checkHost, info[1], info[2], info[3])
+		local col = (i - 1) % 2
+		local r = math.floor((i - 1) / 2)
+		row:SetPoint("TOPLEFT", checkHost, "TOPLEFT", col * 260, -r * 28)
 	end
-
-	local note = Font(general, 12, 1, 1, 1, 0.5)
-	note:SetPoint("BOTTOMLEFT", general, "BOTTOMLEFT", 0, 0)
-	note:SetPoint("BOTTOMRIGHT", general, "BOTTOMRIGHT", 0, 0)
-	note:SetJustifyH("LEFT")
-	note:SetWordWrap(true)
-	note:SetText("The mana spark is on your portrait mana bar. The Designer tab edits the cast-count number on spells.")
-
-	local designer = CreateFrame("Frame", nil, body)
-	designer:SetAllPoints()
-	designer:Hide()
 
 	local db = MP.db
 	local RefreshPreview
@@ -503,10 +487,10 @@ local function CreateOptions()
 		Fill(previewInset, 0.10, 0.10, 0.10, 1)
 		Border(previewInset, 0, 0, 0, 0.55)
 	end
-	previewInset:SetPoint("TOP", designer, "TOP", 0, -4)
+	previewInset:SetPoint("TOP", checkHost, "BOTTOM", 0, -10)
 	previewInset:SetPoint("LEFT", designer, "LEFT", 20, 0)
 	previewInset:SetPoint("RIGHT", designer, "RIGHT", -20, 0)
-	previewInset:SetHeight(200)
+	previewInset:SetHeight(168)
 	previewInset:EnableMouse(true)
 	if previewInset.SetClipsChildren then
 		previewInset:SetClipsChildren(true)
@@ -670,7 +654,7 @@ local function CreateOptions()
 	pcall(hint.SetFont, hint, UIFont, 15, "")
 	hint:SetTextColor(1, 1, 1, 0.85)
 	hint:SetPoint("TOP", styleRow, "BOTTOM", 0, -12)
-	hint:SetText("Click the number for settings")
+	hint:SetText("Drag the number on the button")
 
 	local widgetTitle = designer:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 	pcall(widgetTitle.SetFont, widgetTitle, UIFont, 15, "")
@@ -685,7 +669,7 @@ local function CreateOptions()
 	settings:SetPoint("LEFT", designer, "LEFT", 0, 0)
 	settings:SetPoint("RIGHT", designer, "RIGHT", 0, 0)
 	settings:SetHeight(246)
-	settings:Hide()
+	settings:Show()
 
 	local countSettings = CreateFrame("Frame", nil, settings)
 	countSettings:SetAllPoints()
@@ -845,17 +829,14 @@ local function CreateOptions()
 		if kind == "count" then
 			countOutline:Attach(countDrag)
 			countOutline:SetShownColor(true, false)
-			settings:Show()
-			countSettings:Show()
-			hint:Hide()
-			widgetTitle:SetText("Cast count")
-			widgetTitle:Show()
 		else
 			countOutline:SetShownColor(false, false)
-			settings:Hide()
-			hint:Show()
-			widgetTitle:Hide()
 		end
+		settings:Show()
+		countSettings:Show()
+		hint:Hide()
+		widgetTitle:SetText("Cast count")
+		widgetTitle:Show()
 	end
 
 	local function bumpCount(delta)
@@ -1027,76 +1008,19 @@ local function CreateOptions()
 	resetBtn:SetScript("OnClick", function()
 		applyingStyle = true
 		if MP.ApplyStylePreset then
-			MP.ApplyStylePreset("classic")
+			MP.ApplyStylePreset("ice")
 		end
 		db.countLocked = false
 		applyingStyle = false
-		SelectWidget(nil)
+		SelectWidget("count")
 		Notify()
 	end)
 
-	SelectWidget(nil)
-
-	local function PaintTab(btn, selected)
-		if selected then
-			btn.bg:SetColorTexture(ar, ag, ab, 0.18)
-			btn.label:SetTextColor(ar, ag, ab, 1)
-			btn.bar:Show()
-		else
-			btn.bg:SetColorTexture(0.08, 0.09, 0.10, 1)
-			btn.label:SetTextColor(1, 1, 1, 0.5)
-			btn.bar:Hide()
-		end
-	end
-	local function MakeTab(text)
-		local btn = CreateFrame("Button", nil, tabBar)
-		btn:SetSize(118, 26)
-		btn.bg = Fill(btn, 0.08, 0.09, 0.10, 1)
-		Border(btn, 1, 1, 1, 0.06)
-		btn.label = Font(btn, 13, 1, 1, 1, 0.5)
-		btn.label:SetPoint("CENTER", 0, 1)
-		btn.label:SetText(text)
-		btn.bar = btn:CreateTexture(nil, "ARTWORK")
-		btn.bar:SetPoint("BOTTOMLEFT", 1, 0)
-		btn.bar:SetPoint("BOTTOMRIGHT", -1, 0)
-		btn.bar:SetHeight(2)
-		btn.bar:SetColorTexture(ar, ag, ab, 1)
-		btn.bar:Hide()
-		return btn
-	end
-	local tabGeneral = MakeTab("General")
-	tabGeneral:SetPoint("LEFT", tabBar, "LEFT", 0, 0)
-	local tabDesigner = MakeTab("Designer")
-	tabDesigner:SetPoint("LEFT", tabGeneral, "RIGHT", 6, 0)
-
-	local function ShowTab(which)
-		HideMenu()
-		if which == "designer" then
-			general:Hide()
-			designer:Show()
-			PaintTab(tabGeneral, false)
-			PaintTab(tabDesigner, true)
-			if RefreshPreview then
-				RefreshPreview()
-			end
-		else
-			designer:Hide()
-			general:Show()
-			PaintTab(tabGeneral, true)
-			PaintTab(tabDesigner, false)
-		end
-	end
-	tabGeneral:SetScript("OnClick", function()
-		ShowTab("general")
-	end)
-	tabDesigner:SetScript("OnClick", function()
-		ShowTab("designer")
-	end)
-	ShowTab("designer")
+	SelectWidget("count")
 
 	f:SetScript("OnHide", HideMenu)
 	f:SetScript("OnShow", function()
-		if designer:IsShown() and RefreshPreview then
+		if RefreshPreview then
 			RefreshPreview()
 		end
 	end)

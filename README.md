@@ -20,9 +20,9 @@ Inspired by [MissingPower](https://www.curseforge.com/wow/addons/missingpower) b
 
 ## Install
 
-Prefer the [release zip](https://github.com/gitBellucci/MissingPowerForever/releases/latest) (`MissingPower.zip`). Do **not** use GitHub’s green **Code → Download ZIP** unless you rename the folder.
+Prefer the [release zip](https://github.com/gitBellucci/MissingPower/releases/latest) (`MissingPower.zip`). Do **not** use GitHub’s green **Code → Download ZIP** unless you rename the folder.
 
-1. Extract so the folder is named exactly **`MissingPower`** (not `MissingPower-main` or `MissingPowerForever-main`)
+1. Extract so the folder is named exactly **`MissingPower`** (not `MissingPower-main`)
 2. Put that folder in `World of Warcraft\_classic_beta_\Interface\AddOns\`
 3. Restart WoW (a `/reload` is not enough the first time)
 4. Enable **MissingPowerForever** in the addon list
@@ -33,7 +33,7 @@ Do not install D4KiR’s original MissingPower next to this one — both use the
 
 ## Use
 
-- `/mp` — options (Designer tab: style presets, drag/resize the count, font color and border)
+- `/mp` — options (toggles, style presets, drag/resize the count, font color and border)
 - `/mp toggle` — enable or disable
 - `/mp help` — command list
 
