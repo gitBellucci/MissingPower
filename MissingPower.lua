@@ -82,6 +82,8 @@ local overlays = {}
 local sparks = {}
 local lastPower = {}
 local fsrUntil = 0
+local fsrStarted = 0
+local fsrArmAt = 0
 local SPARK_DUR = 5
 local ticker
 local harvested = 0
@@ -1145,18 +1147,20 @@ local function EnsureManaSpark(bar)
 			return
 		end
 		local remain = fsrUntil - GetTime()
-		if remain <= 0 then
-			self:Hide()
+		self:SetAllPoints(bar)
+		if remain > 0 then
+			self.hitEnd = nil
+			track:SetValue(1 - (remain / SPARK_DUR))
 			return
 		end
-		self:SetAllPoints(bar)
-		local p = 1 - (remain / SPARK_DUR)
-		if p < 0 then
-			p = 0
-		elseif p > 1 then
-			p = 1
+		-- Sit on the last pixel so the tick meets regen instead of vanishing early.
+		track:SetValue(1)
+		if remain > -0.04 and not self.hitEnd then
+			self.hitEnd = true
+			return
 		end
-		track:SetValue(p)
+		self.hitEnd = nil
+		self:Hide()
 	end)
 	holder:Hide()
 	rec = { bar = bar, holder = holder, track = track }
@@ -1169,11 +1173,29 @@ local function StartManaSpark()
 		HideManaSpark()
 		return
 	end
-	fsrUntil = GetTime() + SPARK_DUR
+	fsrArmAt = 0
+	fsrStarted = GetTime()
+	fsrUntil = fsrStarted + SPARK_DUR
 	local rec = EnsureManaSpark(PlayerManaBar())
 	if rec and rec.holder then
+		rec.holder.hitEnd = nil
 		rec.holder:Show()
 	end
+end
+
+local function ArmManaSpark()
+	if not db or not db.enabled or not db.fiveSecondRule or not PlayerUsesMana() then
+		return
+	end
+	if GetTime() - fsrStarted < 0.2 then
+		return
+	end
+	fsrArmAt = GetTime()
+	C_Timer.After(0.1, function()
+		if fsrArmAt > 0 and GetTime() - fsrArmAt >= 0.09 then
+			StartManaSpark()
+		end
+	end)
 end
 
 local function OnPower(unit, token)
@@ -1184,6 +1206,12 @@ local function OnPower(unit, token)
 		token = TYPE_TO_TOKEN[token] or token
 	end
 	token = SafeStr(token) or (not IsSecret(token) and token) or nil
+	if fsrArmAt > 0 and GetTime() - fsrArmAt < 0.35 then
+		if not token or token == "MANA" then
+			StartManaSpark()
+			return
+		end
+	end
 	if not token then
 		return
 	end
@@ -1197,15 +1225,13 @@ local function OnPower(unit, token)
 	if not cur or not old then
 		return
 	end
-	if cur < old - 0.5 then
-		if token == "MANA" then
-			StartManaSpark()
-		end
+	if token == "MANA" and cur < old - 0.5 and GetTime() - fsrStarted >= 0.2 then
+		StartManaSpark()
 	end
 end
 
 local function OnPlayerCast()
-	StartManaSpark()
+	ArmManaSpark()
 end
 
 local function StartTicker()

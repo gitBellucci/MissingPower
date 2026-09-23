@@ -1,3 +1,7 @@
+## 1.0.8
+
+- Mana spark starts when mana is actually spent, not on cast-success, and holds the last pixel so it lines up with regen
+
 ## 1.0.7
 
 - Options are a single page: toggles, preview, styles, and font controls together
