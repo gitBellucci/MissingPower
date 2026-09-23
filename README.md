@@ -8,6 +8,16 @@ Cast counts on your action buttons for [WoW Forever](https://worldofforever.com/
 
 Inspired by [MissingPower](https://www.curseforge.com/wow/addons/missingpower) by D4KiR. This is a new Forever-safe implementation (secret `UnitPower` values, continuous regen), not a copy of that addon.
 
+![Cast counts](docs/manaaddon.mp4)
+
+![Mana spark](docs/manatick.mp4)
+
+![Cast counts on action buttons](docs/ingame.png)
+
+![General options](docs/options.png)
+
+![Designer](docs/designer.png)
+
 ## Install
 
 Prefer the [release zip](https://github.com/gitBellucci/MissingPowerForever/releases/latest) (`MissingPower.zip`). Do **not** use GitHub’s green **Code → Download ZIP** unless you rename the folder.
