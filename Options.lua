@@ -389,7 +389,7 @@ local function CreateOptions()
 	local selR, selG, selB = 78 / 255, 165 / 255, 252 / 255
 	local f = CreateFrame("Frame", "MissingPowerOptions", UIParent)
 	f:Hide()
-	f:SetSize(560, 740)
+	f:SetSize(560, 800)
 	f:SetPoint("CENTER")
 	f:SetFrameStrata("DIALOG")
 	f:SetToplevel(true)
@@ -461,12 +461,13 @@ local function CreateOptions()
 		{ "Cast count", "showCount", "How many times you can cast, on each action button." },
 		{ "Pulse when almost ready", "pulse", "Flashes the spell overlay on your action buttons when regen is about to make that spell affordable." },
 		{ "Spark on player mana bar", "fiveSecondRule", "A tick that slides across YOUR PORTRAIT mana bar for 5 seconds after you spend mana." },
+		{ "Countdown 4,2", "showCountdown", "Seconds left on the mana delay, next to your player frame. One decimal, comma format." },
 	}
 
 	local checkHost = CreateFrame("Frame", nil, designer)
 	checkHost:SetPoint("TOPLEFT", designer, "TOPLEFT", 0, 0)
 	checkHost:SetPoint("TOPRIGHT", designer, "TOPRIGHT", 0, 0)
-	checkHost:SetHeight(56)
+	checkHost:SetHeight(84)
 	for i, info in ipairs(opts) do
 		local row = MakeCheck(checkHost, info[1], info[2], info[3])
 		local col = (i - 1) % 2
@@ -490,7 +491,7 @@ local function CreateOptions()
 	previewInset:SetPoint("TOP", checkHost, "BOTTOM", 0, -10)
 	previewInset:SetPoint("LEFT", designer, "LEFT", 20, 0)
 	previewInset:SetPoint("RIGHT", designer, "RIGHT", -20, 0)
-	previewInset:SetHeight(168)
+	previewInset:SetHeight(188)
 	previewInset:EnableMouse(true)
 	if previewInset.SetClipsChildren then
 		previewInset:SetClipsChildren(true)
@@ -500,9 +501,39 @@ local function CreateOptions()
 	preview:SetAllPoints()
 	preview:EnableMouse(true)
 
+	local plate = CreateFrame("Frame", nil, preview)
+	plate:SetSize(188, 52)
+	plate:SetPoint("CENTER", preview, "CENTER", -110, 6)
+	plate:EnableMouse(false)
+	local plateBg = Fill(plate, 0.06, 0.07, 0.08, 0.9)
+	Border(plate, 1, 1, 1, 0.12)
+	local portrait = plate:CreateTexture(nil, "ARTWORK")
+	portrait:SetSize(40, 40)
+	portrait:SetPoint("LEFT", 6, 0)
+	portrait:SetColorTexture(0.42, 0.32, 0.18, 1)
+	local plateName = Font(plate, 12, 1, 0.82, 0, 0.95)
+	plateName:SetPoint("TOPLEFT", portrait, "TOPRIGHT", 8, 2)
+	plateName:SetText("Player")
+	local hpBar = CreateFrame("StatusBar", nil, plate)
+	hpBar:SetSize(124, 10)
+	hpBar:SetPoint("TOPLEFT", portrait, "TOPRIGHT", 8, -14)
+	hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	hpBar:SetStatusBarColor(0.12, 0.75, 0.18, 1)
+	hpBar:SetMinMaxValues(0, 1)
+	hpBar:SetValue(0.82)
+	Fill(hpBar, 0.08, 0.08, 0.08, 0.8)
+	local mockMana = CreateFrame("StatusBar", nil, plate)
+	mockMana:SetSize(124, 8)
+	mockMana:SetPoint("TOPLEFT", hpBar, "BOTTOMLEFT", 0, -3)
+	mockMana:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+	mockMana:SetStatusBarColor(0.20, 0.40, 1.00, 1)
+	mockMana:SetMinMaxValues(0, 1)
+	mockMana:SetValue(0.55)
+	Fill(mockMana, 0.08, 0.08, 0.08, 0.8)
+
 	local mock = CreateFrame("Frame", nil, preview)
 	mock:SetSize(40, 40)
-	mock:SetPoint("CENTER", preview, "CENTER", 0, 10)
+	mock:SetPoint("CENTER", preview, "CENTER", 130, 10)
 	mock:EnableMouse(false)
 
 	local icon = mock:CreateTexture(nil, "BACKGROUND")
@@ -551,6 +582,15 @@ local function CreateOptions()
 	countSample:SetText("12")
 	countSample:SetTextColor(1, 1, 1, 1)
 	local countOutline = MakeOutline()
+
+	local timerDrag = CreateFrame("Button", nil, preview)
+	timerDrag:SetSize(36, 18)
+	timerDrag:SetFrameLevel(preview:GetFrameLevel() + 6)
+	local timerSample = timerDrag:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	timerSample:SetPoint("CENTER")
+	timerSample:SetText("4,2")
+	timerSample:SetTextColor(0.55, 0.90, 1, 1)
+	local timerOutline = MakeOutline()
 
 	local fonts = {
 		{ "Friz Quadrata", "Fonts\\FRIZQT__.TTF", "Fonts\\FRIZQT__.TTF" },
@@ -812,12 +852,36 @@ local function CreateOptions()
 	local lockCount = MakeCheck(lockRow, "", "countLocked", "Prevent dragging the cast count.")
 	lockCount:SetPoint("LEFT", lockRow, "CENTER", -32, 0)
 
+	local timerSettings = CreateFrame("Frame", nil, settings)
+	timerSettings:SetAllPoints()
+	timerSettings:Hide()
+
+	local cdSizeRow = MakeLabeledRow(timerSettings, "Size")
+	cdSizeRow:SetPoint("TOP", settings, "TOP", 0, 0)
+	local cdMinus = MakeButton(cdSizeRow, "−", 28)
+	cdMinus:SetPoint("LEFT", cdSizeRow, "CENTER", -32, 0)
+	local cdSizeText = Font(cdSizeRow, 13, 1, 1, 1, 0.95)
+	cdSizeText:SetPoint("LEFT", cdMinus, "RIGHT", 10, 0)
+	cdSizeText:SetWidth(28)
+	cdSizeText:SetJustifyH("CENTER")
+	cdSizeText:SetText(tostring(db.cdSize or 12))
+	local cdPlus = MakeButton(cdSizeRow, "+", 28)
+	cdPlus:SetPoint("LEFT", cdSizeText, "RIGHT", 10, 0)
+
+	local cdLockRow = MakeLabeledRow(timerSettings, "Locked")
+	cdLockRow:SetPoint("TOP", cdSizeRow, "BOTTOM", 0, 0)
+	local lockTimer = MakeCheck(cdLockRow, "", "cdLocked", "Prevent dragging the mana countdown.")
+	lockTimer:SetPoint("LEFT", cdLockRow, "CENTER", -32, 0)
+
 	local resetBtn = MakeButton(designer, "Reset layout", 120)
 	resetBtn:SetPoint("BOTTOMLEFT", designer, "BOTTOMLEFT", 0, 0)
 
 	local function SyncLocks()
 		if lockCount.Paint then
 			lockCount:Paint()
+		end
+		if lockTimer and lockTimer.Paint then
+			lockTimer:Paint()
 		end
 		if boldCheck and boldCheck.Paint then
 			boldCheck:Paint()
@@ -826,16 +890,27 @@ local function CreateOptions()
 
 	local function SelectWidget(kind)
 		selectedWidget = kind
+		countOutline:SetShownColor(false, false)
+		timerOutline:SetShownColor(false, false)
 		if kind == "count" then
 			countOutline:Attach(countDrag)
 			countOutline:SetShownColor(true, false)
+			countSettings:Show()
+			timerSettings:Hide()
+			widgetTitle:SetText("Cast count")
+		elseif kind == "timer" then
+			timerOutline:Attach(timerDrag)
+			timerOutline:SetShownColor(true, false)
+			countSettings:Hide()
+			timerSettings:Show()
+			widgetTitle:SetText("Mana countdown")
 		else
-			countOutline:SetShownColor(false, false)
+			countSettings:Show()
+			timerSettings:Hide()
+			widgetTitle:SetText("Cast count")
 		end
 		settings:Show()
-		countSettings:Show()
 		hint:Hide()
-		widgetTitle:SetText("Cast count")
 		widgetTitle:Show()
 	end
 
@@ -857,10 +932,29 @@ local function CreateOptions()
 	plus:SetScript("OnClick", function()
 		bumpCount(1)
 	end)
+
+	local function bumpCd(delta)
+		local v = (db.cdSize or 12) + delta
+		if v < 8 then
+			v = 8
+		end
+		if v > 28 then
+			v = 28
+		end
+		db.cdSize = v
+		cdSizeText:SetText(tostring(v))
+		Notify()
+	end
+	cdMinus:SetScript("OnClick", function()
+		bumpCd(-1)
+	end)
+	cdPlus:SetScript("OnClick", function()
+		bumpCd(1)
+	end)
 	SyncLocks()
 
-	local function OffsetFromMock(frame)
-		local mx, my = mock:GetCenter()
+	local function OffsetFromAnchor(frame, anchor)
+		local mx, my = anchor:GetCenter()
 		local fx, fy = frame:GetCenter()
 		if not mx or not fx then
 			return 0, 0
@@ -868,25 +962,28 @@ local function CreateOptions()
 		return math.floor(fx - mx + 0.5), math.floor(fy - my + 0.5)
 	end
 
-	local function ClampOffset(dx, dy)
+	local function ClampN(dx, dy, n)
+		n = n or 28
 		dx = math.floor((dx or 0) + 0.5)
 		dy = math.floor((dy or 0) + 0.5)
-		if dx > 28 then
-			dx = 28
+		if dx > n then
+			dx = n
 		end
-		if dx < -28 then
-			dx = -28
+		if dx < -n then
+			dx = -n
 		end
-		if dy > 28 then
-			dy = 28
+		if dy > n then
+			dy = n
 		end
-		if dy < -28 then
-			dy = -28
+		if dy < -n then
+			dy = -n
 		end
 		return dx, dy
 	end
 
-	local function MakeDraggable(frame, kind, lockedKey, xKey, yKey, outline)
+	local function MakeDraggable(frame, kind, lockedKey, xKey, yKey, outline, anchor, clampN)
+		anchor = anchor or mock
+		clampN = clampN or 28
 		frame:EnableMouse(true)
 		frame:RegisterForDrag("LeftButton")
 		frame:SetScript("OnEnter", function()
@@ -914,11 +1011,12 @@ local function CreateOptions()
 		end)
 		frame:SetScript("OnDragStop", function(self)
 			self.dragging = false
-			local dx, dy = ClampOffset(OffsetFromMock(self))
+			local ox, oy = OffsetFromAnchor(self, anchor)
+			local dx, dy = ClampN(ox, oy, clampN)
 			db[xKey] = dx
 			db[yKey] = dy
 			self:ClearAllPoints()
-			self:SetPoint("CENTER", mock, "CENTER", dx, dy)
+			self:SetPoint("CENTER", anchor, "CENTER", dx, dy)
 			outline:Attach(self)
 			Notify()
 		end)
@@ -929,28 +1027,31 @@ local function CreateOptions()
 			local scale = self:GetEffectiveScale() or 1
 			local cx, cy = GetCursorPosition()
 			cx, cy = cx / scale, cy / scale
-			local mx, my = mock:GetCenter()
+			local mx, my = anchor:GetCenter()
 			if not mx then
 				return
 			end
-			local dx, dy = ClampOffset(cx - mx, cy - my)
+			local dx, dy = ClampN(cx - mx, cy - my, clampN)
 			db[xKey] = dx
 			db[yKey] = dy
 			self:ClearAllPoints()
-			self:SetPoint("CENTER", mock, "CENTER", dx, dy)
+			self:SetPoint("CENTER", anchor, "CENTER", dx, dy)
 			outline:Attach(self)
 		end)
 		frame:SetScript("OnMouseWheel", function(_, delta)
 			SelectWidget(kind)
 			if kind == "count" then
 				bumpCount(delta > 0 and 1 or -1)
+			elseif kind == "timer" then
+				bumpCd(delta > 0 and 1 or -1)
 			end
 		end)
 		if frame.EnableMouseWheel then
 			frame:EnableMouseWheel(true)
 		end
 	end
-	MakeDraggable(countDrag, "count", "countLocked", "countOffsetX", "countOffsetY", countOutline)
+	MakeDraggable(countDrag, "count", "countLocked", "countOffsetX", "countOffsetY", countOutline, mock, 28)
+	MakeDraggable(timerDrag, "timer", "cdLocked", "cdOffsetX", "cdOffsetY", timerOutline, mockMana, 64)
 
 	local function Deselect()
 		HideMenu()
@@ -960,7 +1061,7 @@ local function CreateOptions()
 	previewInset:SetScript("OnMouseDown", Deselect)
 
 	RefreshPreview = function()
-		local cx, cy = ClampOffset(db.countOffsetX or -12, db.countOffsetY or 12)
+		local cx, cy = ClampN(db.countOffsetX or 1, db.countOffsetY or -1, 28)
 		db.countOffsetX, db.countOffsetY = cx, cy
 		if not countDrag.dragging then
 			countDrag:ClearAllPoints()
@@ -974,12 +1075,31 @@ local function CreateOptions()
 		local fs = db.countSize or 12
 		local tw = countSample:GetStringWidth() or 20
 		countDrag:SetSize(math.max(24, tw + 8), math.max(14, fs + 4))
+		local tx, ty = ClampN(db.cdOffsetX or 54, db.cdOffsetY or -17, 64)
+		db.cdOffsetX, db.cdOffsetY = tx, ty
+		if not timerDrag.dragging then
+			timerDrag:ClearAllPoints()
+			timerDrag:SetPoint("CENTER", mockMana, "CENTER", tx, ty)
+		end
+		if MP.ApplyCountStyle then
+			MP.ApplyCountStyle(timerSample, db.cdSize or 12)
+		end
+		timerSample:SetText("4,2")
+		timerSample:SetJustifyH("CENTER")
+		local tfs = db.cdSize or 12
+		local ttw = timerSample:GetStringWidth() or 24
+		timerDrag:SetSize(math.max(28, ttw + 8), math.max(16, tfs + 4))
 		if selectedWidget == "count" then
 			countOutline:Attach(countDrag)
+		elseif selectedWidget == "timer" then
+			timerOutline:Attach(timerDrag)
 		end
 		local cLock = db.countLocked and true or false
+		local tLock = db.cdLocked and true or false
 		countDrag:SetAlpha(cLock and 0.7 or 1)
+		timerDrag:SetAlpha(tLock and 0.7 or 1)
 		sizeText:SetText(tostring(db.countSize or 12))
+		cdSizeText:SetText(tostring(db.cdSize or 12))
 		if fontDrop.Refresh then
 			fontDrop:Refresh()
 		end
@@ -1011,6 +1131,10 @@ local function CreateOptions()
 			MP.ApplyStylePreset("ice")
 		end
 		db.countLocked = false
+		db.cdOffsetX = 54
+		db.cdOffsetY = -17
+		db.cdSize = 12
+		db.cdLocked = false
 		applyingStyle = false
 		SelectWidget("count")
 		Notify()

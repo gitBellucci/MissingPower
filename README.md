@@ -23,7 +23,7 @@ Do not install D4KiR’s original MissingPower next to this one — both use the
 
 ## Use
 
-- `/mp` — options (toggles, style presets, drag/resize the count, font color and border)
+- `/mp` — options (toggles, style presets, drag the count and the mana countdown)
 - `/mp toggle` — enable or disable
 - `/mp help` — command list
 

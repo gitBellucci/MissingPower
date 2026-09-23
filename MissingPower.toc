@@ -2,7 +2,7 @@
 ## Title: MissingPowerForever
 ## Notes: Cast count on action buttons, optional mana spark. Continuous regen.
 ## Author: Foofi
-## Version: 1.0.8
+## Version: 1.0.9
 ## SavedVariables: MissingPowerDB
 ## Category-enUS: Combat
 ## Category-deDE: Kampf

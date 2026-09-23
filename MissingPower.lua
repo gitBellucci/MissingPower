@@ -59,8 +59,8 @@ local defaults = {
 	energyTick = false,
 	healthTick = false,
 	countSize = 19,
-	countOffsetX = -12,
-	countOffsetY = 12,
+	countOffsetX = 1,
+	countOffsetY = -1,
 	countFont = "Fonts\\ARIALN.TTF",
 	countOutline = "THICKOUTLINE",
 	countBold = false,
@@ -75,6 +75,11 @@ local defaults = {
 	countShadowSize = 2,
 	countLocked = false,
 	activeStyle = "ice",
+	showCountdown = true,
+	cdOffsetX = 54,
+	cdOffsetY = -17,
+	cdSize = 12,
+	cdLocked = false,
 }
 
 local db
@@ -85,6 +90,8 @@ local fsrUntil = 0
 local fsrStarted = 0
 local fsrArmAt = 0
 local SPARK_DUR = 5
+local cdFrame
+local cdText
 local ticker
 local harvested = 0
 local hookedMixin
@@ -434,11 +441,11 @@ local function CountFontFlags()
 	return flags
 end
 
-local function ApplyCountStyle(fs)
+local function ApplyCountStyle(fs, size)
 	if not fs then
 		return
 	end
-	local size = (db and db.countSize) or 12
+	size = size or (db and db.countSize) or 12
 	local path = CountFontPath()
 	local flags = CountFontFlags()
 	if not pcall(fs.SetFont, fs, path, size, flags) then
@@ -467,8 +474,8 @@ local function ApplyCountStyle(fs)
 	fs:SetShadowOffset(sh, -sh)
 end
 
-MP.ApplyCountStyle = function(fs)
-	ApplyCountStyle(fs)
+MP.ApplyCountStyle = function(fs, size)
+	ApplyCountStyle(fs, size)
 end
 
 MP.STYLES = {
@@ -526,8 +533,8 @@ MP.STYLES = {
 		countShadowB = 0,
 		countShadowA = 1,
 		countShadowSize = 2,
-		countOffsetX = -12,
-		countOffsetY = 12,
+		countOffsetX = 1,
+		countOffsetY = -1,
 	},
 	{
 		id = "night",
@@ -600,7 +607,7 @@ local function LayoutOverlay(rec)
 	end
 	ApplyCountStyle(rec.count)
 	rec.count:ClearAllPoints()
-	rec.count:SetPoint("CENTER", rec.frame, "CENTER", db.countOffsetX or -12, db.countOffsetY or 12)
+	rec.count:SetPoint("CENTER", rec.frame, "CENTER", db.countOffsetX or 1, db.countOffsetY or -1)
 	rec.count:SetJustifyH("CENTER")
 	rec.count:SetJustifyV("MIDDLE")
 	if rec.bar then
@@ -1075,14 +1082,74 @@ local function PlayerUsesMana()
 	return token == "MANA"
 end
 
-local function HideManaSpark()
-	local rec = sparks.mana
-	if not rec then
+local function FormatRemain(remain)
+	if not remain or remain < 0 then
+		remain = 0
+	end
+	local tenths = math.floor(remain * 10 + 1e-4)
+	return math.floor(tenths / 10) .. "," .. (tenths % 10)
+end
+
+local function HideCountdown()
+	if cdFrame then
+		cdFrame:Hide()
+	end
+end
+
+local function LayoutCountdown(bar)
+	if not cdFrame or not bar then
 		return
 	end
-	if rec.holder then
+	cdFrame:ClearAllPoints()
+	cdFrame:SetPoint("CENTER", bar, "CENTER", db and db.cdOffsetX or 54, db and db.cdOffsetY or -17)
+end
+
+local function EnsureCountdown(bar)
+	if not bar then
+		return
+	end
+	if not cdFrame then
+		cdFrame = CreateFrame("Frame", "MissingPowerCountdown", UIParent)
+		cdFrame:SetSize(72, 28)
+		cdFrame:SetFrameStrata("HIGH")
+		cdFrame:SetFrameLevel(500)
+		cdFrame:EnableMouse(false)
+		cdText = cdFrame:CreateFontString(nil, "OVERLAY")
+		cdText:SetPoint("CENTER")
+		cdText:SetJustifyH("CENTER")
+	end
+	ApplyCountStyle(cdText, db and db.cdSize or 12)
+	LayoutCountdown(bar)
+	return cdFrame
+end
+
+local function UpdateCountdown(remain, bar)
+	if not db or not db.enabled or not db.fiveSecondRule or not db.showCountdown then
+		HideCountdown()
+		return
+	end
+	bar = bar or PlayerManaBar()
+	if not bar then
+		HideCountdown()
+		return
+	end
+	EnsureCountdown(bar)
+	cdText:SetText(FormatRemain(remain))
+	cdFrame:Show()
+end
+
+MP.LayoutCountdown = function()
+	if cdFrame and cdFrame:IsShown() then
+		UpdateCountdown(math.max(0, fsrUntil - GetTime()), PlayerManaBar())
+	end
+end
+
+local function HideManaSpark()
+	local rec = sparks.mana
+	if rec and rec.holder then
 		rec.holder:Hide()
 	end
+	HideCountdown()
 end
 
 local function EnsureManaSpark(bar)
@@ -1144,6 +1211,7 @@ local function EnsureManaSpark(bar)
 	holder:SetScript("OnUpdate", function(self)
 		if not db or not db.enabled or not db.fiveSecondRule then
 			self:Hide()
+			HideCountdown()
 			return
 		end
 		local remain = fsrUntil - GetTime()
@@ -1151,16 +1219,18 @@ local function EnsureManaSpark(bar)
 		if remain > 0 then
 			self.hitEnd = nil
 			track:SetValue(1 - (remain / SPARK_DUR))
+			UpdateCountdown(remain, bar)
 			return
 		end
-		-- Sit on the last pixel so the tick meets regen instead of vanishing early.
 		track:SetValue(1)
+		UpdateCountdown(0, bar)
 		if remain > -0.04 and not self.hitEnd then
 			self.hitEnd = true
 			return
 		end
 		self.hitEnd = nil
 		self:Hide()
+		HideCountdown()
 	end)
 	holder:Hide()
 	rec = { bar = bar, holder = holder, track = track }
@@ -1263,6 +1333,7 @@ function MP.OnOptionChanged()
 	else
 		HideManaSpark()
 	end
+	pcall(MP.LayoutCountdown)
 	if MP.RefreshDesigner then
 		MP.RefreshDesigner()
 	end
