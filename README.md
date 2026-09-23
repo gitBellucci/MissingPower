@@ -6,15 +6,7 @@
 
 Cast counts on your action buttons for [WoW Forever](https://worldofforever.com/), plus a pulse when regen is about to make a spell affordable, and an optional spark on **your portrait mana bar** after you spend mana.
 
-![Cast counts](docs/manaaddon.mp4)
-
-![Mana spark](docs/manatick.mp4)
-
-![Cast counts on action buttons](docs/ingame.png)
-
-![General options](docs/options.png)
-
-![Designer](docs/designer.png)
+<img width="554" height="736" alt="image" src="https://github.com/user-attachments/assets/2c4eddd4-ef36-401c-9e5e-03aa0fd52716" />
 
 ## Install
 
