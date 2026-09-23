@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: MissingPowerForever
+## Notes: Cast count on action buttons, optional mana spark. Continuous regen.
+## Author: Foofi
+## Version: 1.0.6
+## SavedVariables: MissingPowerDB
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-frFR: Combat
+## Category-esES: Combate
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## X-Flavor: Forever
+
+MissingPower.lua
+Options.lua
