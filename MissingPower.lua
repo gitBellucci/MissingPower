@@ -54,6 +54,7 @@ local defaults = {
 	enabled = true,
 	showBar = false,
 	showCount = true,
+	showDecimals = false,
 	pulse = true,
 	fiveSecondRule = true,
 	energyTick = false,
@@ -744,27 +745,44 @@ local function DisplayCount(slot, spellId)
 	return nil
 end
 
+-- Public path: whole numbers/zero never show trailing .0; fractions one decimal.
+-- Secret/Forever path: SetFormattedText only (cannot branch on secret value);
+-- when showDecimals is on secrets always use %.1f (may show .0 for wholes).
+local function FormatCastCount(value, decimals)
+	if type(value) ~= "number" then return nil end
+	if value > 99 then return "99+" end
+	if decimals then
+		if value < 0.05 then return "0" end
+		local tenths = math.floor(value * 10 + 0.5)
+		if tenths % 10 == 0 then
+			return tostring(math.floor(tenths / 10))
+		end
+		return string.format("%.1f", tenths / 10)
+	end
+	if value < 1 then return "" end
+	return tostring(math.floor(value))
+end
+
 local function SetCountText(fs, value)
 	if value == nil then
 		fs:SetText("")
 		return
 	end
 	if IsSecret(value) then
-		if not pcall(fs.SetFormattedText, fs, "%d", value) then
+		-- Secrets: cannot inspect value; keep %.1f when decimals on (may show .0).
+		local fmt = (db and db.showDecimals) and "%.1f" or "%d"
+		if not pcall(fs.SetFormattedText, fs, fmt, value) then
 			pcall(fs.SetText, fs, value)
 		end
 		return
 	end
 	if type(value) == "number" then
-		if value < 1 then
+		local text = FormatCastCount(value, db and db.showDecimals)
+		if text == nil or text == "" then
 			fs:SetText("")
-			return
+		else
+			fs:SetText(text)
 		end
-		if value > 99 then
-			fs:SetText("99+")
-			return
-		end
-		fs:SetText(tostring(floor(value)))
 		return
 	end
 	if type(value) == "string" then
@@ -830,7 +848,9 @@ local function UpdateButtonInner(btn)
 	if db.showCount then
 		local shown = false
 		if pubCur and pubCost and pubCost > 0 then
-			SetCountText(rec.count, floor(pubCur / pubCost))
+			local casts = pubCur / pubCost
+			if not db.showDecimals then casts = floor(casts) end
+			SetCountText(rec.count, casts)
 			shown = true
 		else
 			local viaCurve = CastsViaCurve(unit, pubType, cost)
@@ -1304,6 +1324,7 @@ local function OnPlayerCast()
 	ArmManaSpark()
 end
 
+local lastDecimalUpdate = 0
 local function StartTicker()
 	if ticker then
 		return
@@ -1314,6 +1335,13 @@ local function StartTicker()
 				HarvestButtons()
 			end
 			PulseOnUpdate()
+			if db and db.showDecimals and db.showCount then
+				local now = GetTime()
+				if now - lastDecimalUpdate >= 0.15 then
+					lastDecimalUpdate = now
+					UpdateAllButtons()
+				end
+			end
 		end)
 	end)
 end

@@ -1,3 +1,9 @@
+## 1.1.0
+
+- Optional decimal cast counts (off by default): show tenths that update as mana regenerates (e.g. 2.5 -> 2.7)
+- Whole casts and zero never show a trailing .0 -- display 0 / 2 / 12, not 0.0 / 2.0
+- Options preview and style chips follow the decimal setting
+- Forever-safe formatting via SetFormattedText when power values are secret
 ## 1.0.9
 
 - Mana delay countdown on the player frame (`4,2` format), draggable in options

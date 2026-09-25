@@ -459,6 +459,7 @@ local function CreateOptions()
 	local opts = {
 		{ "Enable addon", "enabled", "Master toggle." },
 		{ "Cast count", "showCount", "How many times you can cast, on each action button." },
+		{ "Decimal cast counts", "showDecimals", "Show tenths (2.5, 2.7) that update as your mana regenerates, not only whole casts." },
 		{ "Pulse when almost ready", "pulse", "Flashes the spell overlay on your action buttons when regen is about to make that spell affordable." },
 		{ "Spark on player mana bar", "fiveSecondRule", "A tick that slides across YOUR PORTRAIT mana bar for 5 seconds after you spend mana." },
 		{ "Countdown 4,2", "showCountdown", "Seconds left on the mana delay, next to your player frame. One decimal, comma format." },
@@ -467,7 +468,7 @@ local function CreateOptions()
 	local checkHost = CreateFrame("Frame", nil, designer)
 	checkHost:SetPoint("TOPLEFT", designer, "TOPLEFT", 0, 0)
 	checkHost:SetPoint("TOPRIGHT", designer, "TOPRIGHT", 0, 0)
-	checkHost:SetHeight(84)
+	checkHost:SetHeight(96)
 	for i, info in ipairs(opts) do
 		local row = MakeCheck(checkHost, info[1], info[2], info[3])
 		local col = (i - 1) % 2
@@ -476,6 +477,9 @@ local function CreateOptions()
 	end
 
 	local db = MP.db
+	local function CountSampleText()
+		return (db and db.showDecimals) and "2.7" or "12"
+	end
 	local RefreshPreview
 	local selectedWidget
 
@@ -579,7 +583,7 @@ local function CreateOptions()
 	countDrag:SetFrameLevel(preview:GetFrameLevel() + 6)
 	local countSample = countDrag:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	countSample:SetPoint("CENTER")
-	countSample:SetText("12")
+	countSample:SetText(CountSampleText())
 	countSample:SetTextColor(1, 1, 1, 1)
 	local countOutline = MakeOutline()
 
@@ -626,6 +630,9 @@ local function CreateOptions()
 		local active = db.activeStyle or "classic"
 		for i = 1, #styleCards do
 			local card = styleCards[i]
+			if card.sample then
+				card.sample:SetText(CountSampleText())
+			end
 			if card.id == active then
 				card.brd:SetColor(ar, ag, ab, 0.95)
 				card.bg:SetColorTexture(ar, ag, ab, 0.12)
@@ -652,7 +659,8 @@ local function CreateOptions()
 			card.brd = Border(card, 1, 1, 1, 0.10)
 			local sample = card:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 			sample:SetPoint("TOP", 0, -6)
-			sample:SetText("12")
+			sample:SetText(CountSampleText())
+			card.sample = sample
 			local saved = {}
 			for k, v in pairs(style) do
 				if k ~= "id" and k ~= "name" then
@@ -1072,6 +1080,7 @@ local function CreateOptions()
 			MP.ApplyCountStyle(countSample)
 		end
 		countSample:SetJustifyH("CENTER")
+		countSample:SetText(CountSampleText())
 		local fs = db.countSize or 12
 		local tw = countSample:GetStringWidth() or 20
 		countDrag:SetSize(math.max(24, tw + 8), math.max(14, fs + 4))
